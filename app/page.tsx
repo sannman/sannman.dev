@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import ParticleField from "./ParticleField";
 
 const links = [
   { label: "GitHub", href: "https://github.com/sannman" },
@@ -121,7 +122,7 @@ export default function Home() {
       >
         {theme === "dark" ? <SunIcon /> : <MoonIcon />}
       </button>
-
+      <ParticleField />
       <main>
         {/* ── Hero ── */}
         <section className="hero section" id="top">
@@ -153,10 +154,13 @@ export default function Home() {
                 <span>education</span>
                 <strong>Elphinstone College, HBSU</strong>
               </div>
-
               <div className="panelRow">
                 <span>direction</span>
                 <strong>AI/ML · finance</strong>
+              </div>
+              <div className="panelRow">
+                <span>location</span>
+                <strong>Mumbai, India</strong>
               </div>
             </aside>
           </div>
@@ -165,7 +169,14 @@ export default function Home() {
         {/* ── About ── */}
         <section className="section about fadeIn" id="about">
           <div className="sectionLabel">About</div>
-          <p>Figuring things out</p>
+          <p>
+            Figuring things out — one project at a time.
+          </p>
+          <p className="aboutSub">
+            I like building things that sit at the edge of what I know.
+            Right now that means ML pipelines, finance tools, and whatever
+            else seems worth learning.
+          </p>
         </section>
 
         {/* ── Education ── */}
