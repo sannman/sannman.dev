@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ParticleField from "./ParticleField";
 
 const links = [
@@ -35,15 +35,13 @@ const techStack = [
 const education = [
   {
     institution: "Dr. Homi Bhabha State University, Mumbai",
-    degree:
-      "Bachelor of Science (Hons), Artificial Intelligence and Machine Learning",
+    degree: "Bachelor of Science (Hons), Artificial Intelligence and Machine Learning",
     period: "Jun 2025 – 2029",
     grade: "CGPA: 8.59",
   },
   {
     institution: "Elphinstone College",
-    degree:
-      "Higher Secondary High School Diploma, Science (Electronics and Mathematics)",
+    degree: "Higher Secondary High School Diploma, Science (Electronics and Mathematics)",
     period: "Aug 2023 – Mar 2025",
     grade: "47.67 / C2",
   },
@@ -57,15 +55,7 @@ const education = [
 
 function SunIcon() {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="12" r="5" />
       <line x1="12" y1="1" x2="12" y2="3" />
       <line x1="12" y1="21" x2="12" y2="23" />
@@ -81,15 +71,7 @@ function SunIcon() {
 
 function MoonIcon() {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
     </svg>
   );
@@ -97,6 +79,17 @@ function MoonIcon() {
 
 export default function Home() {
   const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const cardRef = useRef<HTMLAnchorElement>(null);
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const [mumbaiTime, setMumbaiTime] = useState("");
+
+  useEffect(() => {
+    // Prevent the browser from restoring previous scroll position (which can cause a 2-5px top offset on reload)
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
+    }
+    window.scrollTo(0, 0);
+  }, []);
 
   useEffect(() => {
     const saved = localStorage.getItem("theme") as "dark" | "light" | null;
@@ -112,8 +105,67 @@ export default function Home() {
     localStorage.setItem("theme", next);
   }
 
+  useEffect(() => {
+    const card = cardRef.current;
+    if (!card) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const rect = card.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width) * 100;
+      const y = ((e.clientY - rect.top) / rect.height) * 100;
+      card.style.setProperty("--mouse-x", `${x}%`);
+      card.style.setProperty("--mouse-y", `${y}%`);
+    };
+
+    card.addEventListener("mousemove", handleMouseMove);
+    return () => card.removeEventListener("mousemove", handleMouseMove);
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      setScrollProgress(docHeight > 0 ? (scrollTop / docHeight) * 100 : 0);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const updateTime = () => {
+      setMumbaiTime(
+        new Date().toLocaleTimeString("en-IN", {
+          timeZone: "Asia/Kolkata",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+        })
+      );
+    };
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("revealed");
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.08, rootMargin: "0px 0px -50px 0px" }
+    );
+    document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <>
+      <div className="scrollProgress" style={{ width: `${scrollProgress}%` }} />
       <button
         className="themeToggle"
         onClick={toggleTheme}
@@ -125,135 +177,140 @@ export default function Home() {
       <ParticleField />
       <main>
         {/* ── Hero ── */}
-        <section className="hero section" id="top">
-          <div className="heroGrid">
-            <div className="heroCopy">
-              <h1>Hi, I&apos;m Sannman.</h1>
-              <p className="lead">
-                BSc AIML sophomore at Elphinstone College, HBSU. I build
-                practical tools at the intersection of machine learning, and
-                finance.
-              </p>
-              <div className="actions" aria-label="Social links">
-                {links.map((link) => (
-                  <a
-                    className="button"
-                    href={link.href}
-                    key={link.label}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {link.label} ↗
-                  </a>
-                ))}
-              </div>
+        <section className="hero" id="top">
+          <div className="heroInner">
+            <div className="terminalLine">
+              <span className="prompt">~ $</span>
+              <span className="command">whoami</span>
+              <span className="cursor" />
             </div>
 
-            <aside className="profilePanel" aria-label="Profile summary">
-              <div className="panelRow">
-                <span>education</span>
-                <strong>Elphinstone College, HBSU</strong>
+            <h1>
+              Hi, I&apos;m <span className="nameGradient">Sannman</span>.
+            </h1>
+
+            <p className="lead">
+              BSc AIML sophomore at Elphinstone College, HBSU. I build
+              practical tools at the intersection of machine learning and
+              finance.
+            </p>
+
+            <div className="actions">
+              {links.map((link) => (
+                <a className="button" href={link.href} key={link.label} target="_blank" rel="noopener noreferrer">
+                  {link.label} ↗
+                </a>
+              ))}
+            </div>
+
+            <div className="statsBar">
+              <div className="stat">
+                <span className="statLabel">Education</span>
+                <span className="statValue">Elphinstone College, HBSU</span>
               </div>
-              <div className="panelRow">
-                <span>direction</span>
-                <strong>AI/ML · finance</strong>
+              <div className="stat">
+                <span className="statLabel">Focus</span>
+                <span className="statValue">AI/ML · Finance</span>
               </div>
-              <div className="panelRow">
-                <span>location</span>
-                <strong>Mumbai, India</strong>
+              <div className="stat">
+                <span className="statLabel">Location</span>
+                <span className="statValue">Mumbai · {mumbaiTime || "--:--"} IST</span>
               </div>
-            </aside>
+              <div className="stat">
+                <span className="statLabel">Status</span>
+                <span className="statValue">
+                  <span className="statusDot" />
+                  Open to collaborate
+                </span>
+              </div>
+            </div>
           </div>
         </section>
 
         {/* ── About ── */}
-        <section className="section about fadeIn" id="about">
+        <section className="about reveal" id="about">
           <div className="sectionLabel">About</div>
-          <p>
+          <p className="aboutStatement">
             Figuring things out — one project at a time.
           </p>
-          <p className="aboutSub">
-            I like building things that sit at the edge of what I know.
-            Right now that means ML pipelines, finance tools, and whatever
-            else seems worth learning.
-          </p>
         </section>
 
-        {/* ── Education ── */}
-        <section className="section fadeIn fadeInDelay1" id="education">
-          <div className="sectionLabel">Education</div>
-          <div className="eduTimeline">
-            {education.map((edu) => (
-              <div className="eduCard" key={edu.institution}>
-                <div className="eduHeader">
-                  <strong>{edu.institution}</strong>
-                  <span className="eduPeriod">{edu.period}</span>
+        {/* ── Education + Tech Stack (side by side) ── */}
+        <div className="contentRow reveal">
+          <div>
+            <div className="sectionLabel">Education</div>
+            <div className="timeline">
+              {education.map((edu) => (
+                <div className="timelineEntry" key={edu.institution}>
+                  <div className="timelineDot" />
+                  <div className="timelineContent">
+                    <div className="timelineHeader">
+                      <strong>{edu.institution}</strong>
+                      <span className="timelinePeriod">{edu.period}</span>
+                    </div>
+                    <p className="timelineDegree">{edu.degree}</p>
+                    {edu.grade && <span className="timelineGrade">{edu.grade}</span>}
+                  </div>
                 </div>
-                <p className="eduDegree">{edu.degree}</p>
-                {edu.grade && <span className="eduGrade">{edu.grade}</span>}
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </section>
 
-        {/* ── Tech Stack ── */}
-        <section className="section fadeIn fadeInDelay1" id="stack">
-          <div className="sectionLabel">Tech Stack</div>
-          <div className="techGrid">
-            {techStack.map((tech) => (
-              <span
-                className={tech.coursework ? "badge badgeCoursework" : "badge"}
-                key={tech.label}
-              >
-                {tech.icon}
-                {tech.label}
-              </span>
-            ))}
+          <div>
+            <div className="sectionLabel">Tech Stack</div>
+            <div className="techGrid">
+              {techStack.map((tech) => (
+                <span className={tech.coursework ? "badge badgeCoursework" : "badge"} key={tech.label}>
+                  {tech.icon}
+                  {tech.label}
+                </span>
+              ))}
+            </div>
+            <p className="techNote">* coursework level</p>
           </div>
-          <p className="techNote">* coursework level</p>
-        </section>
+        </div>
 
         {/* ── Featured Project ── */}
-        <section className="section fadeIn fadeInDelay2" id="work">
-          <div className="sectionLabel">Featured project</div>
-          
+        <section className="techSection reveal" id="work">
+          <div className="sectionLabel">Featured Project</div>
+
           <a
-            className="project"
+            ref={cardRef}
+            className="projectCard"
             href="https://github.com/sannman/Yfin"
             target="_blank"
             rel="noopener noreferrer"
           >
-            <div>
-              <h2>Yfin</h2>
-              <p>
-                Building a scalable stock data pipeline using Yahoo Finance,
-                PostgreSQL, and Python for technical analysis and
-                experimentation.
-              </p>
+            <span className="featuredBadge">Open Source</span>
+            <h2>Yfin</h2>
+            <p>
+              Building a scalable stock data pipeline using Yahoo Finance,
+              PostgreSQL, and Python for technical analysis and
+              experimentation.
+            </p>
+            <div className="projectTags">
+              <span className="projectTag">Python</span>
+              <span className="projectTag">PostgreSQL</span>
+              <span className="projectTag">Yahoo Finance</span>
             </div>
             <span className="projectLink">View on GitHub →</span>
           </a>
         </section>
 
-        {/* ── Connect / Footer ── */}
-        <section className="closing fadeIn fadeInDelay4" aria-label="Connect">
+        {/* ── Footer ── */}
+        <footer className="footer reveal" aria-label="Connect">
           <div>
-            <div className="sectionLabel">Connect</div>
+            <span className="footerLabel">Connect</span>
             <p>Open to collaborations, feedback, and serious project ideas.</p>
           </div>
           <div className="footerLinks">
             {links.map((link) => (
-              <a
-                href={link.href}
-                key={link.label}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+              <a href={link.href} key={link.label} target="_blank" rel="noopener noreferrer">
                 {link.label}
               </a>
             ))}
           </div>
-        </section>
+        </footer>
       </main>
     </>
   );
